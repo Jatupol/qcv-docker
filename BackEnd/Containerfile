@@ -1,0 +1,165 @@
+# backend/Containerfile
+# Sampling Inspection Control System - Backend Container
+# Ubuntu 24.04 + Podman + Node.js 22.17.1
+# Complete Separation Entity Architecture with Generic Patterns
+
+# ==================== BUILD STAGE ====================
+FROM node:22.17.1-alpine AS builder
+
+# Build arguments
+ARG NODE_VERSION=22.17.1
+ARG BUILD_DATE
+ARG BUILD_VERSION=1.0.0
+
+# Container metadata
+LABEL maintainer="Quality Engineering Team"
+LABEL version="${BUILD_VERSION}"
+LABEL description="Sampling Inspection Control System Backend"
+LABEL node.version="${NODE_VERSION}"
+LABEL build.date="${BUILD_DATE}"
+
+# Set working directory
+WORKDIR /app
+
+# Install build dependencies for native modules
+RUN apk add --no-cache \
+    python3 \
+    make \
+    g++ \
+    git \
+    curl \
+    tzdata
+
+# Set timezone to Asia/Bangkok (parity with production stage)
+ENV TZ=Asia/Bangkok
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# Copy package files first (for better Docker layer caching)
+COPY package*.json ./
+COPY tsconfig.json ./
+
+# Copy local shared package (required for @qcv/shared dependency)
+COPY packages/ ./packages/
+
+# Rebuild the shared package's dist BEFORE installing the main project,
+# so npm ci picks up fresh dist/cjs/* type declarations (immune to stale snapshots).
+RUN cd packages/shared && npm install && npm run build
+
+# Install ALL dependencies (including devDependencies for building)
+RUN npm ci --include=dev
+
+# Copy source code
+COPY src/ ./src/
+
+# Build TypeScript to JavaScript
+# Note: .env not needed during build, only at runtime via docker-compose
+RUN npm run build
+
+# Remove development dependencies to reduce image size
+RUN npm prune --omit=dev && npm cache clean --force
+
+# ==================== PRODUCTION STAGE ====================
+FROM node:22.17.1-alpine AS production
+
+# Install production system dependencies (nano, netcat added)
+RUN apk add --no-cache \
+    curl \
+    ca-certificates \
+    tzdata \
+    tini \
+    nano \
+    netcat-openbsd \
+    && rm -rf /var/cache/apk/*
+
+# Set timezone to Asia/Bangkok
+ENV TZ=Asia/Bangkok
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# Create non-root user for security
+RUN addgroup -g 1001 qcuser && \
+    adduser -D -u 1001 -G qcuser qcuser
+
+# Create application directories (only if missing) and ensure correct ownership
+RUN mkdir -p /app /app/logs /app/uploads /app/reports /app/temp && \
+    chown -R qcuser:qcuser /app
+
+# Set working directory
+WORKDIR /app
+
+# Switch to non-root user
+USER qcuser
+
+# Copy built application from builder stage
+COPY --from=builder --chown=qcuser:qcuser /app/dist ./dist
+COPY --from=builder --chown=qcuser:qcuser /app/node_modules ./node_modules
+COPY --from=builder --chown=qcuser:qcuser /app/package*.json ./
+
+# Copy local shared package (required for @qcv/shared symlink in node_modules)
+COPY --from=builder --chown=qcuser:qcuser /app/packages ./packages
+
+# NOTE: .env file is NOT copied into production image for security
+# Environment variables are injected by docker-compose at runtime
+
+# ==================== ENVIRONMENT CONFIGURATION ====================
+ENV NODE_ENV=production
+ENV PORT=8080
+ENV LOG_LEVEL=info
+ENV NODE_OPTIONS="--max-old-space-size=512"
+
+# Sampling Inspection Control System specific
+ENV QC_SYSTEM_NAME="Sampling Inspection Control System"
+ENV QC_VERSION="1.0.0"
+ENV QC_ENVIRONMENT="production"
+
+# Database tuning defaults (host/port/name/user must come from .env at runtime).
+# DO NOT set DB_HOST/DB_PORT/DB_NAME/DB_USER here — image-level ENV overrides
+# .env values via dotenv, masking real config and silently routing to wrong DBs.
+ENV DB_CONNECTION_TIMEOUT=30000
+ENV DB_MAX_CONNECTIONS=20
+
+# Session configuration defaults
+ENV SESSION_MAX_AGE=86400000
+ENV SESSION_SECURE=false
+ENV SESSION_HTTP_ONLY=true
+
+# CORS defaults
+ENV CORS_CREDENTIALS=true
+
+# Rate limiting defaults
+ENV RATE_LIMIT_ENABLED=true
+ENV RATE_LIMIT_MAX_REQUESTS=1000
+ENV RATE_LIMIT_WINDOW_MS=900000
+
+# ==================== PORT EXPOSURE ====================
+EXPOSE 8080
+
+# ==================== VOLUME DEFINITIONS ====================
+VOLUME ["/app/logs", "/app/uploads", "/app/reports", "/app/temp"]
+
+# ==================== HEALTH CHECK ====================
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+# ==================== ENTRYPOINT & CMD ====================
+ENTRYPOINT ["tini", "--"]
+CMD ["node", "dist/server.js"]
+
+# ==================== CONTAINER LABELS ====================
+LABEL org.opencontainers.image.title="Sampling Inspection Control System Backend"
+LABEL org.opencontainers.image.description="Complete Separation Entity Architecture Backend"
+LABEL org.opencontainers.image.source="https://github.com/tigersolution/sampling-qc"
+LABEL org.opencontainers.image.vendor="Tiger Solution"
+LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.created="${BUILD_DATE}"
+LABEL org.opencontainers.image.version="${BUILD_VERSION}"
+
+LABEL sampling.system="sampling-inspection"
+LABEL sampling.entities="19+"
+LABEL sampling.architecture="complete-separation-entity"
+LABEL sampling.patterns="generic-90%-reuse"
+LABEL sampling.auth="session-based"
+LABEL sampling.database="postgresql"
+LABEL sampling.node.version="${NODE_VERSION}"
+
+LABEL io.containers.autoupdate="registry"
+LABEL io.containers.systemd.new="true"

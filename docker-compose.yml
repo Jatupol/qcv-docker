@@ -1,0 +1,112 @@
+# Podman Compose Configuration
+# QC Manufacturing System - Quality Control and Inspection Management
+#
+# Pre-requisite: Build images first using:
+#   podman build -t localhost/oqa-qc-frontend:1.0.0 -f FrontEnd/Containerfile FrontEnd/
+#   podman build -t localhost/oqa-qc-backend:1.0.0 -f BackEnd/Containerfile BackEnd/
+#
+# Usage:
+#   podman-compose up -d
+#   podman-compose down
+#   podman-compose logs -f
+#
+# Last Updated: 2026-01-28
+name: qcv-system  
+services:
+  # ==================== FRONTEND SERVICE ====================
+  frontend:
+    container_name: tiger_oqa-qc-frontend
+    image: localhost/oqa-qc-frontend:1.0.0
+    ports:
+      - "8022:80"
+    networks:
+      - tigernetwork
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      - TZ=Asia/Bangkok
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    volumes:
+      # External volume mounts (SELinux :Z suffix for proper labeling)
+      - /mnt/Data/Tiger/qcv-system/frontend_app/dist:/usr/share/nginx/html:Z
+      # Runtime config — overrides VITE_* values without rebuilding the SPA.
+      # Loaded by index.html before main bundle (window.__APP_CONFIG__).
+      - /mnt/Data/Tiger/qcv-system/frontend_app/config.js:/usr/share/nginx/html/config.js:ro,Z
+    labels:
+      - "app.name=qcv-frontend"
+      - "app.version=1.0.0"
+
+  # ==================== BACKEND SERVICE ====================
+  # Includes: Express API Server + MSSQL Sync Scheduler
+  backend:
+    container_name: tiger_oqa-qc-backend
+    image: localhost/oqa-qc-backend:1.0.0
+    ports:
+      - "8021:8080"
+    networks:
+      - tigernetwork
+    # Expose the host machine to this container as `host.containers.internal`
+    # (needed when DB_HOST in .env points to a service running on the host).
+    # If the database is in a sibling container on tigernetwork, set DB_HOST to
+    # that container's name instead and remove this entry.
+    extra_hosts:
+      - "host.containers.internal:host-gateway"
+    environment:
+      - NODE_ENV=production
+      - TZ=Asia/Bangkok
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    volumes:
+      # External volume mounts (SELinux :Z suffix for proper labeling)
+      # .env mounted read-only — server.ts reads it via dotenv.config({ path: '/app/.env' })
+      - /mnt/Data/Tiger/qcv-system/backend_app/.env:/app/.env:ro,Z
+      # Compiled JS — mounted so hot fixes can be deployed without rebuilding the image.
+      # Host dir MUST contain the built dist/ (copy from image once: `podman cp <c>:/app/dist/. <host>/dist/`).
+      - /mnt/Data/Tiger/qcv-system/backend_app/dist:/app/dist:Z
+      # NOTE: do NOT mount /app/packages/shared — it's a workspace package symlinked
+      # into node_modules/@qcv/shared. Overlaying it with an empty host dir breaks
+      # the symlink target and causes "Cannot find module '@qcv/shared'".
+      - /mnt/Data/Tiger/qcv-system/backend_app/logs:/app/logs:Z
+      - /mnt/Data/Tiger/qcv-system/backend_app/uploads:/app/uploads:Z
+      - /mnt/Data/Tiger/qcv-system/backend_app/reports:/app/reports:Z
+      - /mnt/Data/Tiger/qcv-system/backend_app/temp:/app/temp:Z
+    labels:
+      - "app.name=qcv-backend"
+      - "app.version=1.0.0"
+      - "app.features=api,mssql-sync-scheduler"
+
+# ==================== NETWORKS ====================
+# tigernetwork is shared with other services (postgres15, mariadb*, gitea, etc.).
+# Mark as external so compose attaches to the existing network instead of recreating it.
+# Create once on the host with: podman network create tigernetwork
+networks:
+  tigernetwork:
+    name: tigernetwork
+    external: true
+
+# ==================== VOLUMES ====================
+# Using external host path mounts instead of named volumes
+# Host paths configured in service volumes sections:
+#
+# Frontend:
+#   /mnt/Data/Tiger/qcv-system/frontend_app/dist
+#
+# Backend:
+#   /mnt/Data/Tiger/qcv-system/backend_app/dist
+#   /mnt/Data/Tiger/qcv-system/backend_app/packages/shared
+#   /mnt/Data/Tiger/qcv-system/backend_app/logs
+#   /mnt/Data/Tiger/qcv-system/backend_app/uploads
+#   /mnt/Data/Tiger/qcv-system/backend_app/reports
+#   /mnt/Data/Tiger/qcv-system/backend_app/temp

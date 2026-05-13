@@ -1,0 +1,36 @@
+{
+  "name": "@qcv/shared",
+  "version": "1.0.0",
+  "description": "Shared utilities for QCV project",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/cjs/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/cjs/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
+    },
+    "./fiscalWeek": {
+      "types": "./dist/cjs/fiscalWeek.d.ts",
+      "import": "./dist/esm/fiscalWeek.js",
+      "require": "./dist/cjs/fiscalWeek.js"
+    }
+  },
+  "scripts": {
+    "build": "npm run build:cjs && npm run build:esm",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "clean": "rimraf dist",
+    "prepublishOnly": "npm run build"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "devDependencies": {
+    "@types/node": "^20.10.5",
+    "typescript": "^5.3.3",
+    "rimraf": "^5.0.5"
+  }
+}

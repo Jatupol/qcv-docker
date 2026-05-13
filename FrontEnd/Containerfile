@@ -1,0 +1,48 @@
+# frontend/Containerfile
+# ==================== PRODUCTION STAGE ====================
+
+# Use the smallest, most secure Nginx base image.
+FROM docker.io/library/nginx:alpine AS production
+
+# Install only essential runtime packages and utilities.
+# Removed: samba, nano, netcat-openbsd.
+RUN apk add --no-cache \
+    curl \
+    ca-certificates \
+    tzdata \
+    && rm -rf /var/cache/apk/*
+
+# Set timezone to Asia/Bangkok
+ENV TZ=Asia/Bangkok
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# Use a non-root user with a consistent UID/GID for better Podman/Kubernetes security and compatibility.
+# The default Nginx alpine image uses UID/GID 101, so we'll use a new one (1000) for better isolation.
+RUN addgroup -g 1000 nginx-qc && \
+    adduser -D -u 1000 -G nginx-qc nginx-qc
+
+# Create necessary directories and ensure the non-root user has proper ownership.
+RUN mkdir -p /var/cache/nginx /var/log/nginx /var/run/nginx /usr/share/nginx/html && \
+    chown -R nginx-qc:nginx-qc /var/cache/nginx /var/log/nginx /var/run/nginx /usr/share/nginx/html && \
+    chmod 755 /var/cache/nginx /var/log/nginx /var/run/nginx /usr/share/nginx/html
+
+# Copy static files (if dist folder exists in build context, uncomment the line below)
+COPY --chown=nginx-qc:nginx-qc dist/ /usr/share/nginx/html/
+
+# Remove default nginx configuration to avoid conflicts
+RUN rm /etc/nginx/conf.d/default.conf
+
+# Copy custom nginx base configuration (assuming nginx.conf is available in the build context)
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# Create custom Nginx configuration for the SPA, proxy, and security.
+COPY sampling-inspection.conf /etc/nginx/conf.d/sampling-inspection.conf
+
+# Note: Running as root to bind to port 80
+# In production, consider using port 8080 and running as non-root user
+
+# Expose only the Nginx web port
+EXPOSE 80
+
+# Command to run Nginx in the foreground
+CMD ["nginx", "-g", "daemon off;"]

@@ -1,0 +1,183 @@
+/* Training Components Styles */
+
+/* Section */
+.training-section {
+  margin-bottom: 25px;
+  border-left: 4px solid #1e40af;
+  padding-left: 15px;
+}
+
+.training-section h2 {
+  color: #1e40af;
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+
+/* Subsection */
+.training-subsection {
+  color: #555;
+  font-size: 16px;
+  margin: 10px 0 5px 0;
+}
+
+/* Paragraph */
+.training-paragraph {
+  margin: 10px 0;
+  line-height: 1.8;
+}
+
+/* Step Box */
+.training-step-box {
+  background: #eff6ff;
+  padding: 15px;
+  border-radius: 5px;
+  margin: 10px 0;
+  border-left: 3px solid #1e40af;
+}
+
+.training-step-box strong {
+  color: #1e3a8a;
+}
+
+.training-step-box p {
+  margin: 5px 0;
+}
+
+.training-step-box ol,
+.training-step-box ul {
+  margin: 10px 0 10px 20px;
+}
+
+.training-step-box ol li,
+.training-step-box ul li {
+  margin: 5px 0;
+}
+
+/* Table */
+.training-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 10px 0;
+  font-size: 14px;
+}
+
+.training-table th {
+  background: #1e40af;
+  color: white;
+  padding: 10px;
+  text-align: left;
+  font-weight: 600;
+}
+
+.training-table td {
+  padding: 10px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.training-table tr:hover {
+  background: #f8f9fa;
+}
+
+/* Message Boxes */
+.training-message-box {
+  padding: 15px;
+  border-radius: 5px;
+  margin: 15px 0;
+}
+
+.training-message-box h3 {
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+
+.training-message-box ul {
+  margin-left: 20px;
+}
+
+.training-message-box ul li {
+  margin: 5px 0;
+}
+
+.training-message-box p {
+  margin: 5px 0;
+}
+
+/* Success Box - Blue */
+.training-success-box {
+  background: #eff6ff;
+  border: 2px solid #3b82f6;
+}
+
+.training-success-box h3 {
+  color: #3b82f6;
+}
+
+.training-success-box ul li {
+  color: #3b82f6;
+}
+
+/* Warning Box - Red */
+.training-warning-box {
+  background: #fef2f2;
+  border: 2px solid #ef4444;
+}
+
+.training-warning-box h3 {
+  color: #ef4444;
+}
+
+.training-warning-box ul li {
+  color: #ef4444;
+}
+
+/* Info Box - Yellow */
+.training-info-box {
+  background: #fffbeb;
+  border-left: 4px solid #f59e0b;
+}
+
+.training-info-box h3 {
+  color: #f59e0b;
+}
+
+.training-info-box p {
+  color: #f59e0b;
+}
+
+/* Help Box - Blue */
+.training-help-box {
+  background: #eff6ff;
+  border-left: 4px solid #1e40af;
+  text-align: center;
+}
+
+.training-help-box h3 {
+  color: #1e40af;
+}
+
+/* List */
+.training-list {
+  margin: 10px 0 10px 20px;
+}
+
+.training-list li {
+  margin: 5px 0;
+  line-height: 1.6;
+}
+
+/* Highlight */
+.training-highlight {
+  color: #1e40af;
+  font-weight: 600;
+}
+
+/* Print Styles */
+@media print {
+  .training-section {
+    page-break-inside: avoid;
+  }
+  .training-step-box,
+  .training-message-box {
+    page-break-inside: avoid;
+  }
+}

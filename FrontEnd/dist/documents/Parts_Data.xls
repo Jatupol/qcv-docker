@@ -1,0 +1,5 @@
+partno	partno_customer	product_families	versions	customers_site	tab	product_type	customer_driver	lar_achieve_threshold	lar_accept_min_threshold	lar_accept_max_threshold	lar_abnormal_threshold	dppm_achieve_threshold	dppm_accept_min_threshold	dppm_accept_max_threshold	dppm_abnormal_threshold	underkill_achieve_threshold	underkill_accept_min_threshold	underkill_accept_max_threshold	underkill_abnormal_threshold
+0B31127	0B31127	ASTRA	ASTRA-V		UP	CLA	Vela/Carina												
+0B31128	0B31128	ASTRA	ASTRA-V		DN	CLA	Vela/Carina												
+0F29509	0F29509	ASTRA	ASTRA-TN		UP	CLA	Leo-B												
+0F29510	0F29510	ASTRA	ASTRA-TN		DN	CLA	Leo-B												

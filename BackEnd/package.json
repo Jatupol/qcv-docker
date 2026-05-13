@@ -1,0 +1,71 @@
+﻿{
+    "name":  "sampling-inspection-qc-backend",
+    "version":  "1.0.0",
+    "description":  "Sampling Inspection Control SystemBackend",
+    "main":  "dist/server.js",
+    "scripts":  {
+                    "dev":  "ts-node-dev --respawn --transpile-only src/server.ts",
+                    "build":  "tsc",
+                    "start":  "node dist/server.js",
+                    "start:dev":  "npm run dev",
+                    "clean":  "rimraf dist",
+                    "build:clean":  "npm run clean \u0026\u0026 npm run build",
+                    "type-check":  "tsc --noEmit",
+                    "lint":  "echo \u0027Linting skipped for simplified setup\u0027",
+                    "test":  "echo \u0027Tests skipped for simplified setup\u0027",
+                    "db:generate":  "drizzle-kit generate",
+                    "db:migrate":  "drizzle-kit migrate",
+                    "db:push":  "drizzle-kit push",
+                    "db:studio":  "drizzle-kit studio",
+                    "db:check":  "ts-node scripts/check-schema.ts",
+                    "db:check:auto":  "ts-node scripts/check-schema-auto.ts"
+                },
+    "keywords":  [
+                     "manufacturing",
+                     "quality-control",
+                     "nodejs",
+                     "typescript",
+                     "postgresql",
+                     "express"
+                 ],
+    "author":  "Your Team",
+    "license":  "MIT",
+    "dependencies":  {
+                         "@qcv/shared":  "file:./packages/shared",
+                         "@types/multer":  "^2.0.0",
+                         "bcrypt":  "^5.1.1",
+                         "connect-pg-simple":  "^9.0.1",
+                         "cors":  "^2.8.5",
+                         "dotenv":  "^17.2.2",
+                         "drizzle-orm":  "^0.45.1",
+                         "express":  "^4.18.2",
+                         "express-session":  "^1.17.3",
+                         "mssql":  "^12.0.0",
+                         "multer":  "^2.0.2",
+                         "node-cron":  "^4.2.1",
+                         "nodemailer":  "^7.0.10",
+                         "pg":  "^8.11.3",
+                         "sharp":  "^0.34.5"
+                     },
+    "devDependencies":  {
+                            "@types/bcrypt":  "^5.0.2",
+                            "@types/connect-pg-simple":  "^7.0.3",
+                            "@types/cors":  "^2.8.17",
+                            "@types/dotenv":  "^6.1.1",
+                            "@types/express":  "^4.17.21",
+                            "@types/express-session":  "^1.17.10",
+                            "@types/mssql":  "^9.1.8",
+                            "@types/node":  "^20.10.5",
+                            "@types/nodemailer":  "^7.0.3",
+                            "@types/pg":  "^8.10.9",
+                            "@types/sharp":  "^0.31.1",
+                            "drizzle-kit":  "^0.31.8",
+                            "rimraf":  "^5.0.5",
+                            "ts-node-dev":  "^2.0.0",
+                            "typescript":  "^5.3.3"
+                        },
+    "engines":  {
+                    "node":  "\u003e=18.0.0",
+                    "npm":  "\u003e=8.0.0"
+                }
+}
