@@ -25,14 +25,18 @@ docker/
 
 ### Step 1: Build Images
 
+> **Version-bump rule.** Tag, Containerfile default `ARG BUILD_VERSION`, and this README must stay in lockstep. Always pass `--build-arg BUILD_VERSION=<tag>` so the image's `org.opencontainers.image.version` LABEL matches the tag in `podman images`. A mismatch is how stale-image drift hides (see `br/FIX_PRODUCTION_API_PROXY_404.md`).
+
 ```bash
 cd docker
 
 # Build Frontend
-podman build -t localhost/oqa-qc-frontend:1.0.1 -f FrontEnd/Containerfile FrontEnd/
+podman build --build-arg BUILD_VERSION=1.0.1 \
+  -t localhost/oqa-qc-frontend:1.0.1 -f FrontEnd/Containerfile FrontEnd/
 
 # Build Backend
-podman build -t localhost/oqa-qc-backend:1.0.0 -f BackEnd/Containerfile BackEnd/
+podman build --build-arg BUILD_VERSION=1.0.1 \
+  -t localhost/oqa-qc-backend:1.0.1 -f BackEnd/Containerfile BackEnd/
 ```
 
 ### Step 2: Deploy
@@ -90,13 +94,16 @@ CORS_ORIGIN=http://your-server:8022
 
 ```bash
 # Build Frontend
-podman build -t localhost/oqa-qc-frontend:1.0.1 -f FrontEnd/Containerfile FrontEnd/
+podman build --build-arg BUILD_VERSION=1.0.1 \
+  -t localhost/oqa-qc-frontend:1.0.1 -f FrontEnd/Containerfile FrontEnd/
 
 # Build Backend
-podman build -t localhost/oqa-qc-backend:1.0.0 -f BackEnd/Containerfile BackEnd/
+podman build --build-arg BUILD_VERSION=1.0.1 \
+  -t localhost/oqa-qc-backend:1.0.1 -f BackEnd/Containerfile BackEnd/
 
-# Rebuild with no cache
-podman build --no-cache -t localhost/oqa-qc-backend:1.0.0 -f BackEnd/Containerfile BackEnd/
+# Rebuild with no cache (forces nginx config / dist refresh)
+podman build --no-cache --build-arg BUILD_VERSION=1.0.1 \
+  -t localhost/oqa-qc-frontend:1.0.1 -f FrontEnd/Containerfile FrontEnd/
 ```
 
 ### Compose Commands
@@ -160,11 +167,17 @@ curl http://localhost:8021/api/scheduler/status
 cd docker
 
 # 2. Build images
-podman build -t localhost/oqa-qc-frontend:1.0.1 -f FrontEnd/Containerfile FrontEnd/
-podman build -t localhost/oqa-qc-backend:1.0.0 -f BackEnd/Containerfile BackEnd/
+podman build --build-arg BUILD_VERSION=1.0.1 \
+  -t localhost/oqa-qc-frontend:1.0.1 -f FrontEnd/Containerfile FrontEnd/
+podman build --build-arg BUILD_VERSION=1.0.1 \
+  -t localhost/oqa-qc-backend:1.0.1 -f BackEnd/Containerfile BackEnd/
 
-# 3. Verify images
+# 3. Verify images — tag and baked-in LABEL must match
 podman images | grep oqa-qc
+podman inspect localhost/oqa-qc-frontend:1.0.1 \
+  --format '{{index .Labels "org.opencontainers.image.version"}}'
+podman inspect localhost/oqa-qc-backend:1.0.1 \
+  --format '{{index .Labels "org.opencontainers.image.version"}}'
 
 # 4. Deploy
 podman-compose up -d
@@ -214,4 +227,4 @@ SELECT mssql_enabled, mssql_sync FROM sysconfig WHERE id = 1;
 
 ---
 
-**Last Updated**: 2026-01-28
+**Last Updated**: 2026-05-18 — bumped images to 1.0.1 to roll forward the nginx `/api/` proxy fix from commit `11d52b24` (upstream renamed `oqa-qc-backend:8080` → `backend:8080`). See `br/FIX_PRODUCTION_API_PROXY_404.md`.
