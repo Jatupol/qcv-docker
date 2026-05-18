@@ -66,8 +66,9 @@ async function startServer() {
             process.exit(1);
         }
         console.log('📦 Creating Express application with all middleware...');
+        let app;
         try {
-            const app = await (0, app_1.createApp)(db);
+            app = await (0, app_1.createApp)(db);
             console.log('✅ Express application created successfully');
             console.log('   🔐 Session middleware configured');
             console.log('   🛡️ Authentication middleware initialized');
@@ -82,7 +83,6 @@ async function startServer() {
         }
         console.log('🌐 Starting HTTP server...');
         try {
-            const app = await (0, app_1.createApp)(db);
             server = app.listen(PORT, HOST, () => {
                 console.log('\n🎉 Manufacturing Quality Control Server Started Successfully!');
                 console.log('='.repeat(60));

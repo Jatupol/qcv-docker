@@ -1,8 +1,24 @@
 # frontend/Containerfile
 # ==================== PRODUCTION STAGE ====================
+#
+# Build:   podman build -t localhost/oqa-qc-frontend:1.0.1 -f FrontEnd/Containerfile FrontEnd/
+# Deploy:  podman-compose up -d --force-recreate frontend
+#
+# 1.0.1 (2026-05-18) — Corrective rebuild for production /api/* 404 issue.
+#                      See br/FIX_PRODUCTION_API_PROXY_404.md.
+#                      nginx /api/ now proxies to `backend:8080` (compose service
+#                      name on tigernetwork) instead of the legacy
+#                      `oqa-qc-backend:8080` hostname that no longer resolves.
+# 1.0.0 — initial release.
 
 # Use the smallest, most secure Nginx base image.
 FROM docker.io/library/nginx:alpine AS production
+
+# OCI image labels — visible via `podman inspect <image>` for traceability.
+LABEL org.opencontainers.image.title="oqa-qc-frontend" \
+      org.opencontainers.image.version="1.0.1" \
+      org.opencontainers.image.description="QC Manufacturing System frontend (Nginx + React SPA). Proxies /api/ to backend:8080 on tigernetwork." \
+      org.opencontainers.image.source="docker/FrontEnd/Containerfile"
 
 # Install only essential runtime packages and utilities.
 # Removed: samba, nano, netcat-openbsd.

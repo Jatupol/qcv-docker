@@ -29,7 +29,7 @@ docker/
 cd docker
 
 # Build Frontend
-podman build -t localhost/oqa-qc-frontend:1.0.0 -f FrontEnd/Containerfile FrontEnd/
+podman build -t localhost/oqa-qc-frontend:1.0.1 -f FrontEnd/Containerfile FrontEnd/
 
 # Build Backend
 podman build -t localhost/oqa-qc-backend:1.0.0 -f BackEnd/Containerfile BackEnd/
@@ -90,7 +90,7 @@ CORS_ORIGIN=http://your-server:8022
 
 ```bash
 # Build Frontend
-podman build -t localhost/oqa-qc-frontend:1.0.0 -f FrontEnd/Containerfile FrontEnd/
+podman build -t localhost/oqa-qc-frontend:1.0.1 -f FrontEnd/Containerfile FrontEnd/
 
 # Build Backend
 podman build -t localhost/oqa-qc-backend:1.0.0 -f BackEnd/Containerfile BackEnd/
@@ -160,7 +160,7 @@ curl http://localhost:8021/api/scheduler/status
 cd docker
 
 # 2. Build images
-podman build -t localhost/oqa-qc-frontend:1.0.0 -f FrontEnd/Containerfile FrontEnd/
+podman build -t localhost/oqa-qc-frontend:1.0.1 -f FrontEnd/Containerfile FrontEnd/
 podman build -t localhost/oqa-qc-backend:1.0.0 -f BackEnd/Containerfile BackEnd/
 
 # 3. Verify images

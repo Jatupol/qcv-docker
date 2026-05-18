@@ -2,7 +2,7 @@
 # QC Manufacturing System - Quality Control and Inspection Management
 #
 # Pre-requisite: Build images first using:
-#   podman build -t localhost/oqa-qc-frontend:1.0.0 -f FrontEnd/Containerfile FrontEnd/
+#   podman build -t localhost/oqa-qc-frontend:1.0.1 -f FrontEnd/Containerfile FrontEnd/
 #   podman build -t localhost/oqa-qc-backend:1.0.0 -f BackEnd/Containerfile BackEnd/
 #
 # Usage:
@@ -16,7 +16,7 @@ services:
   # ==================== FRONTEND SERVICE ====================
   frontend:
     container_name: tiger_oqa-qc-frontend
-    image: localhost/oqa-qc-frontend:1.0.0
+    image: localhost/oqa-qc-frontend:1.0.1
     ports:
       - "8022:80"
     networks:

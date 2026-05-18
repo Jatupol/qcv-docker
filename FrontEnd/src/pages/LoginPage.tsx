@@ -109,12 +109,9 @@ const LoginPage: React.FC = () => {
       });
 
       if (user) {
-        // Mark the moment of a successful login. If the post-redirect /status
-        // check on the next page comes back unauthenticated, we know the
-        // browser failed to persist the session cookie (iPad Safari ITP /
-        // Private Browsing / page translation proxy etc.) and we can break
-        // the login loop with an actionable message instead of bouncing
-        // silently back here.
+        // Mark the moment of a successful login. The fallback bounce-detection
+        // in useEffect still uses this as a safety net, though the confirm
+        // loop below should make the bounce impossible by construction.
         sessionStorage.setItem('qcv:login-attempt', String(Date.now()));
 
         setIsAuthenticated(true);
@@ -127,11 +124,38 @@ const LoginPage: React.FC = () => {
         // and produced a 401 → "Authentication Error: session-expired" toast
         // layered on top of the success screen.
 
-        setTimeout(() => {
+        // Confirm the session cookie actually persisted before navigating.
+        // We only redirect once /api/auth/status returns authenticated:true,
+        // which makes the iPad login bounce impossible by construction —
+        // if the cookie didn't stick, we never leave this page, and the
+        // cookieIssue banner surfaces an actionable message instead.
+        const REDIRECT_DEADLINE_MS = 2000;
+        const POLL_INTERVAL_MS = 250;
+        const startedAt = Date.now();
+        let confirmed = false;
+        while (Date.now() - startedAt < REDIRECT_DEADLINE_MS) {
+          try {
+            const status = await authAPI.checkStatus();
+            if (status.isAuthenticated) {
+              confirmed = true;
+              break;
+            }
+          } catch {
+            // transient — try again until the deadline
+          }
+          await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
+        }
+
+        if (confirmed) {
           const intendedPath = sessionStorage.getItem('intendedPath') || '/dashboard';
           sessionStorage.removeItem('intendedPath');
           window.location.href = intendedPath;
-        }, 1500);
+        } else {
+          sessionStorage.removeItem('qcv:login-attempt');
+          setIsAuthenticated(false);
+          setLoginMessage('');
+          setCookieIssue(true);
+        }
       }
     } catch (error) {
       console.error('Login error:', error);

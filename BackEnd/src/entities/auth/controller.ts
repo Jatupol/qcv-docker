@@ -11,6 +11,7 @@ import { AuthService } from './service';
 import { authMiddleware } from '../../middleware/auth';
 import type { CompatibleQCRequest } from '../../middleware/auth';
 import { logAuthEvent } from '../../utils/authEventLogger';
+import { getDatabasePool } from '../../config/database';
 import {
   LoginRequest,
   ChangePasswordRequest,
@@ -62,15 +63,41 @@ export class AuthController {
           result.user
         );
 
-        // Persist the session to the PostgreSQL store BEFORE responding.
-        // Without this the response (and Set-Cookie header) can race ahead of
-        // the async store write on slow connections — observed on iPad Safari
-        // as a login loop, where a successful login is followed by a /status
-        // call that sees no session and bounces the user back to /login.
+        // Persist the session to the PostgreSQL store BEFORE responding,
+        // then confirm the row is actually readable. Without this the response
+        // (and Set-Cookie header) can race ahead of the async store write on
+        // slow connections — observed on iPad Safari as a login loop, where a
+        // successful login is followed by a /status call that sees no session
+        // and bounces the user back to /login.
         try {
           await new Promise<void>((resolve, reject) => {
             req.session.save((err: any) => (err ? reject(err) : resolve()));
           });
+
+          const sid = req.session.id;
+          const pool = getDatabasePool();
+          let persisted = false;
+          for (let attempt = 0; attempt < 3; attempt++) {
+            const check = await pool.query(
+              'SELECT 1 FROM session WHERE sid = $1 LIMIT 1',
+              [sid]
+            );
+            if ((check.rowCount ?? 0) > 0) {
+              persisted = true;
+              break;
+            }
+            await new Promise((r) => setTimeout(r, 25));
+          }
+
+          if (!persisted) {
+            console.error('❌ Session row not visible after save', { sid });
+            res.status(500).json(authMiddleware.formatError(
+              'Session could not be persisted. Please try again.',
+              'SESSION_NOT_PERSISTED',
+              500
+            ));
+            return;
+          }
         } catch (saveErr) {
           console.error('Session save error:', saveErr);
           res.status(500).json(authMiddleware.formatError(

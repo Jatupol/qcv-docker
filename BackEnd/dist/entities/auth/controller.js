@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const auth_1 = require("../../middleware/auth");
 const authEventLogger_1 = require("../../utils/authEventLogger");
+const database_1 = require("../../config/database");
 const types_1 = require("./types");
 class AuthController {
     constructor(authService) {
@@ -24,6 +25,22 @@ class AuthController {
                     await new Promise((resolve, reject) => {
                         req.session.save((err) => (err ? reject(err) : resolve()));
                     });
+                    const sid = req.session.id;
+                    const pool = (0, database_1.getDatabasePool)();
+                    let persisted = false;
+                    for (let attempt = 0; attempt < 3; attempt++) {
+                        const check = await pool.query('SELECT 1 FROM session WHERE sid = $1 LIMIT 1', [sid]);
+                        if ((check.rowCount ?? 0) > 0) {
+                            persisted = true;
+                            break;
+                        }
+                        await new Promise((r) => setTimeout(r, 25));
+                    }
+                    if (!persisted) {
+                        console.error('❌ Session row not visible after save', { sid });
+                        res.status(500).json(auth_1.authMiddleware.formatError('Session could not be persisted. Please try again.', 'SESSION_NOT_PERSISTED', 500));
+                        return;
+                    }
                 }
                 catch (saveErr) {
                     console.error('Session save error:', saveErr);

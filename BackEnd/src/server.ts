@@ -17,6 +17,7 @@ import path from 'path';
 dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
 import { Server } from 'http';
+import { Application } from 'express';
 import { Pool } from 'pg';
 
 // Import configuration - all values from .env
@@ -109,16 +110,16 @@ async function startServer(): Promise<void> {
     }
 
     // ==================== STEP 3: CREATE EXPRESS APP ====================
-    
+
     console.log('📦 Creating Express application with all middleware...');
+    let app: Application;
     try {
-      // ✅ FIXED: Pass database pool to createApp as required
-      const app = await createApp(db);
+      app = await createApp(db);
       console.log('✅ Express application created successfully');
       console.log('   🔐 Session middleware configured');
-      console.log('   🛡️ Authentication middleware initialized'); 
+      console.log('   🛡️ Authentication middleware initialized');
       console.log('   🔍 Auto-discovery routes registered');
-      
+
     } catch (error) {
       console.error('❌ Express app creation failed:', error);
       if (error instanceof Error) {
@@ -126,13 +127,11 @@ async function startServer(): Promise<void> {
       }
       process.exit(1);
     }
-    
+
     // ==================== STEP 4: START HTTP SERVER ====================
-    
+
     console.log('🌐 Starting HTTP server...');
     try {
-      const app = await createApp(db); // Re-create for server start
-      
       server = app.listen(PORT, HOST, () => {
         console.log('\n🎉 Manufacturing Quality Control Server Started Successfully!');
         console.log('=' .repeat(60));
