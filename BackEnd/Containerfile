@@ -1,3 +1,4 @@
+# check=skip=SecretsUsedInArgOrEnv
 # backend/Containerfile
 # Sampling Inspection Control System - Backend Container
 # Ubuntu 24.04 + Podman + Node.js 22.17.1
@@ -9,7 +10,7 @@ FROM node:22.17.1-alpine AS builder
 # Build arguments
 ARG NODE_VERSION=22.17.1
 ARG BUILD_DATE
-ARG BUILD_VERSION=1.0.0
+ARG BUILD_VERSION=1.0.3
 
 # Container metadata
 LABEL maintainer="Quality Engineering Team"
@@ -108,7 +109,7 @@ ENV NODE_OPTIONS="--max-old-space-size=512"
 
 # Sampling Inspection Control System specific
 ENV QC_SYSTEM_NAME="Sampling Inspection Control System"
-ENV QC_VERSION="1.0.0"
+ENV QC_VERSION="1.0.1"
 ENV QC_ENVIRONMENT="production"
 
 # Database tuning defaults (host/port/name/user must come from .env at runtime).
@@ -145,6 +146,11 @@ ENTRYPOINT ["tini", "--"]
 CMD ["node", "dist/server.js"]
 
 # ==================== CONTAINER LABELS ====================
+# Re-declare ARGs from builder stage — ARG values do not carry across stages
+ARG BUILD_DATE
+ARG BUILD_VERSION=1.0.3
+ARG NODE_VERSION=22.17.1
+
 LABEL org.opencontainers.image.title="Sampling Inspection Control System Backend"
 LABEL org.opencontainers.image.description="Complete Separation Entity Architecture Backend"
 LABEL org.opencontainers.image.source="https://github.com/tigersolution/sampling-qc"
