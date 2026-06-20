@@ -31,8 +31,8 @@ docker/
 cd docker
 
 # Build Frontend
-podman build --build-arg BUILD_VERSION=1.0.3 \
-  -t localhost/oqa-qc-frontend:1.0.3 -f FrontEnd/Containerfile FrontEnd/
+podman build --build-arg BUILD_VERSION=1.0.5 \
+  -t localhost/oqa-qc-frontend:1.0.5 -f FrontEnd/Containerfile FrontEnd/
 
 # Build Backend
 podman build --build-arg BUILD_VERSION=1.0.3 \
@@ -94,8 +94,8 @@ CORS_ORIGIN=http://your-server:8022
 
 ```bash
 # Build Frontend
-podman build --build-arg BUILD_VERSION=1.0.3 \
-  -t localhost/oqa-qc-frontend:1.0.3 -f FrontEnd/Containerfile FrontEnd/
+podman build --build-arg BUILD_VERSION=1.0.5 \
+  -t localhost/oqa-qc-frontend:1.0.5 -f FrontEnd/Containerfile FrontEnd/
 
 # Build Backend
 podman build --build-arg BUILD_VERSION=1.0.3 \

@@ -7,7 +7,7 @@ FROM docker.io/library/nginx:alpine AS production
 # Build arguments — pass via --build-arg BUILD_VERSION=x.y.z so the LABEL
 # inside the image matches the tag on the outside.
 ARG BUILD_DATE
-ARG BUILD_VERSION=1.0.3
+ARG BUILD_VERSION=1.0.5
 
 # Install only essential runtime packages and utilities.
 # Removed: samba, nano, netcat-openbsd.
