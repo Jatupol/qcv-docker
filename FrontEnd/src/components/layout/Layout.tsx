@@ -1,0 +1,1443 @@
+// client/src/components/layout/Layout.tsx
+// ===== MAIN LAYOUT COMPONENT WITH COMPLETE ORANGE THEME =====
+// Complete Separation Entity Architecture - Main Layout Component
+ 
+
+import { type ReactNode, useState, useEffect, useMemo, useCallback } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { useAuth  } from '../../contexts/AuthContext';
+import UserInfoModal from '../users/UserInfoModal';
+import sysconfigService from '../../services/sysconfigService';
+import { infLotInputService } from '../../services/infLotInputService';
+import Footer from '../common/Footer';
+
+// ============ TYPE DEFINITIONS ============
+
+interface LayoutProps {
+  children: ReactNode;
+}
+
+interface NavigationItem {
+  name: string;
+  href?: string;
+  icon: JSX.Element;
+  children?: NavigationItem[];
+  roles?: string[]; // Array of roles that can access this menu item (undefined = all roles)
+}
+
+// ============ COMPREHENSIVE NAVIGATION CONFIGURATION ============
+
+const navigationItems: NavigationItem[] = [
+  {
+    name: 'Dashboard',
+    href: '/dashboard',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+      </svg>
+    ),
+    children: [
+      {
+        name: 'Dashboard',
+        href: '/dashboard',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+        )
+      },
+      /*
+      {
+        name: 'Defect Analysis Dashboard',
+        href: '/DefectAnalysis',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+        )
+      },
+        */{
+        name: 'Dashboard - %LAR Report',
+        href: '/dashboard/lar-dashboard',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+        )
+      },
+      {
+        name: 'Dashboard - DPPM Report',
+        href: '/dashboard/dprm-dashboard',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        )
+      },
+      {
+        name: 'Dashboard - Underkill rate Report',
+        href: '/dashboard/underkill-dashboard',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
+          </svg>
+        )
+      },
+      {
+        name: 'Top Defect By Product',
+        href: '/report/top-defect-report',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+          </svg>
+        )
+      },
+      {
+        name: 'Graph OQA',
+        href: '/dashboard/oqa-vi-dashboard',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+          </svg>
+        )
+      },
+    ],
+  },
+  {
+    name: 'Customer Format',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+      </svg>
+    ),
+    roles: ['admin', 'manager','user'], // Visible to admin, manager, and user
+    children: [
+      {
+        name: 'OQA',
+        href: '/customer-data/oqa',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+          </svg>
+        )
+      }, 
+      {
+        name: 'Seagate Format',
+        href: '/customer-data/format',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+          </svg>
+        )
+      }, 
+      {
+        name: 'LAR VMI',
+        href: '/customer-data/lar-report',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        )
+      },
+      {
+        name: 'Seagate IQA vs NHK OQA',
+        href: '/customer-data/sgt-iqa-nhk-oqa-report',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+          </svg>
+        )
+      },
+      {
+        name: 'NHK OQA DPPM Overall',
+        href: '/customer-data/nhk-oqa-dppm-overall-report',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+          </svg>
+        )
+      },
+      {
+        name: 'Table Seagate IQA',
+        href: '/customer-data/sgt-iqa-result-report',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+        )
+      },
+      {
+        name: 'SGT IQA Trend',
+        href: '/customer-data/sgt-iqa-trend-report',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+          </svg>
+        )
+      },
+      {
+        name: 'Graph OQA',
+        href: '/customer-data/oqa-vi-dashboard',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+          </svg>
+        )
+      },
+      {
+        name: 'Overview OQA',
+        href: '/customer-data/overview-oqa',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7" />
+          </svg>
+        )
+      },
+    ],
+  },
+  {
+    name: 'Inspection',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+      </svg>
+    ),
+    roles: ['admin', 'manager','user'], // Visible to admin, manager, and user
+    children: [
+      {
+        name: 'OQA',
+        href: '/inspection/oqa',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        )
+      },
+      {
+        name: 'OBA',
+        href: '/inspection/oba',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+          </svg>
+        )
+      },
+      {
+        name: 'SIV',
+        href: '/inspection/siv',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+          </svg>
+        )
+      },
+      {
+        name: 'SGT IQA',
+        href: '/inspection/iqa',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        )
+      },
+      {
+        name: 'Validation with DBFVI',
+        href: '/report/fvi-inspection',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+          </svg>
+        )
+      },
+      {
+        name: 'Defect Type Analysis',
+        href: '/inspection/defect-type-analysis',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+        )
+      },
+      {
+        name: 'OQA Reject All Defect',
+        href: '/customer-data/oqa-reject-all-defect',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        )
+      },
+    ],
+  },
+  {
+    name: 'Master Data',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+      </svg>
+    ),
+    roles: ['admin', 'manager'], // Only visible to admin and manager
+    children: [
+    { 
+        name: 'Inspection Data Setup', 
+        href: '/master-data/inspection', 
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+          </svg>
+        )
+      },
+      { 
+        name: 'Customers', 
+        href: '/master-data/customers', 
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+          </svg>
+        )
+      },     
+      { 
+        name: 'Sampling Reasons', 
+        href: '/master-data/samplingResons', 
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+          </svg>
+        )
+      },
+      { 
+        name: 'Defects', 
+        href: '/master-data/defects', 
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        )
+      },      
+      { 
+        name: 'Products Site', 
+        href: '/master-data/products-site', 
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+        )
+      },      
+      {
+        name: 'Parts',
+        href: '/master-data/parts',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+        )
+      },
+      {
+        name: 'Fiscal Calendar',
+        href: '/master-data/fiscal-calendar',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        )
+      },
+    ],
+  },
+  {
+    name: 'News',
+    href: '/news',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+      </svg>
+    ),
+    roles: ['admin', 'manager'], 
+  },
+  {
+    name: 'Users',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+      </svg>
+    ),
+    roles: ['admin', 'manager'],
+    children: [
+      {
+        name: 'Users Management',
+        href: '/master-data/users',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-2.13a4 4 0 11-8 0 4 4 0 018 0zm6 0a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+        ),
+        roles: ['admin', 'manager'],
+      },
+      {
+        name: 'Active Sessions',
+        href: '/admin/sessions',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        ),
+        roles: ['admin'],
+      },
+      {
+        name: 'Login Log',
+        href: '/admin/login-logs',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        ),
+        roles: ['admin'],
+      },
+      {
+        name: 'Audit Log',
+        href: '/admin/audit-log',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+        ),
+        roles: ['admin'],
+      },
+    ],
+  },
+  {
+    name: 'Reports',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+    ),
+    children: [
+      {
+        name: 'OQA VMI LAR TNHK',
+        href: '/report/lar-report',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        )
+      },
+      {
+        name: 'Seagate IQA vs NHK OQA',
+        href: '/report/sgt-iqa-vs-nhk-oqa',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        )
+      }, 
+      {
+        name: 'NHK OQA DPPM Overall Report',
+        href: '/report/oqaoverall-rereport',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        )
+      },      
+      {
+        name: 'Table Seagate IQA',
+        href: '/report/sgt-iqa-result-report',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+        )
+      },
+      {
+        name: 'SGT IQA Trend Report',
+        href: '/report/sgt-iqa-trend-report',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+          </svg>
+        )
+      },
+      {
+        name: 'Production Line Heatmap',
+        href: '/report/production-line-heatmap',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+        )
+      },
+      {
+        name: 'Product Quality Scorecard',
+        href: '/report/product-quality-scorecard',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+          </svg>
+        )
+      },
+      {
+        name: 'Defect Root Cause',
+        href: '/report/defect-root-cause',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        )
+      },
+      {
+        name: 'Monthly Quality Trend',
+        href: '/report/monthly-quality-trend',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+          </svg>
+        )
+      },
+      {
+        name: 'History Tracking',
+        href: '/report/history-tracking',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        )
+      },
+      {
+        name: 'Defect Image Summary',
+        href: '/report/defect-image-summary',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        )
+      },
+      {
+        name: 'SOQM - Weekly',
+        href: '/report/soqm-weekly',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        )
+      },
+      {
+        name: 'SOQM - Daily',
+        href: '/report/soqm-daily',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        )
+      },
+    ],
+  },
+  {
+    name: 'Interface',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+    ),
+    roles: ['admin', 'manager'], // Only visible to admin and manager
+    children: [
+      { 
+        name: 'Check In Import', 
+        href: '/interface/checkin-import', 
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+          </svg>
+        )
+      },
+      { 
+        name: 'Lot Input Import', 
+        href: '/interface/lotinput-import', 
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        )
+      },
+      /*
+      {
+        name: 'Inspection Import',
+        href: '/interface/inspection-import',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        )
+      },
+      */
+      {
+        name: 'User Operation',
+        href: '/interface/useroperation',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13.5 3.5a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+          </svg>
+        )
+      },
+    ],
+  },
+  /**
+  {
+    name: 'Defect Image Management',
+    href: '/master-data/defect-images',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+    ),
+    roles: ['admin'], // Admin only
+  },
+   */
+  {
+    name: 'Administrator',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+      </svg>
+    ),
+    roles: ['admin', 'manager'],
+    children: [
+      {
+        name: 'Setting',
+        href: '/settings',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        ),
+        roles: ['admin', 'manager'],
+      },
+      {
+        name: 'Purge Policies',
+        href: '/admin/purge',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" />
+          </svg>
+        ),
+        roles: ['admin'],
+      },
+    ],
+  },
+];
+
+// ============ HELPER FUNCTIONS ============
+
+/**
+ * Filter navigation items based on user role
+ * @param items - Navigation items to filter
+ * @param userRole - Current user's role
+ * @returns Filtered navigation items
+ */
+const filterNavigationByRole = (items: NavigationItem[], userRole: string | undefined): NavigationItem[] => {
+  if (!userRole) return items;
+
+  return items
+    .filter(item => {
+      // If no roles specified, item is visible to all
+      if (!item.roles || item.roles.length === 0) return true;
+      // Check if user's role is in the allowed roles list
+      return item.roles.includes(userRole);
+    })
+    .map(item => {
+      // If item has children, filter them too
+      if (item.children) {
+        return {
+          ...item,
+          children: filterNavigationByRole(item.children, userRole)
+        };
+      }
+      return item;
+    })
+    // Remove parent items that have no visible children
+    .filter(item => {
+      if (item.children) {
+        return item.children.length > 0;
+      }
+      return true;
+    });
+};
+
+const getIconColorClass = (itemName: string): string => {
+  const name = itemName.toLowerCase();
+  if (name.includes('dashboard')) return 'icon-dashboard';
+  if (name.includes('customer')) return 'icon-customer';
+  if (name.includes('inspection')) return 'icon-inspection';
+  if (name.includes('master')) return 'icon-master';
+  if (name.includes('news')) return 'icon-news';
+  if (name.includes('user')) return 'icon-users';
+  if (name.includes('report')) return 'icon-reports';
+  if (name.includes('interface')) return 'icon-interface';
+  if (name.includes('setting')) return 'icon-settings';
+  return 'text-gray-400';
+};
+
+// ============ MAIN LAYOUT COMPONENT ============
+
+export default function Layout({ children }: LayoutProps) {
+  const { user, logout, checkAuth, sessionExpiry } = useAuth();
+  const location = useLocation();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [news, setNews] = useState<string>('');
+  const [currentTime, setCurrentTime] = useState<string>('');
+  const [systemName, setSystemName] = useState<string>('Sampling Inspection Control System');
+  const [missingItemCount, setMissingItemCount] = useState<number>(0);
+
+  // Filter navigation items based on user role (memoized to prevent infinite re-renders)
+  const visibleNavigationItems = useMemo(
+    () => filterNavigationByRole(navigationItems, user?.role),
+    [user?.role]
+  );
+
+  // Auto-expand parent menu if current page is a child
+  useEffect(() => {
+    const currentPath = location.pathname;
+    const newExpanded: Record<string, boolean> = {};
+
+    visibleNavigationItems.forEach(item => {
+      if (item.children) {
+        const hasActiveChild = item.children.some(child => child.href === currentPath);
+        if (hasActiveChild) {
+          newExpanded[item.name] = true;
+        }
+      }
+    });
+
+    setExpandedMenus(prev => ({ ...prev, ...newExpanded }));
+  }, [location.pathname, visibleNavigationItems]);
+
+  // Fetch news and system info from sysconfig using centralized service
+  useEffect(() => {
+    const fetchSystemConfig = async () => {
+      try {
+        const response = await sysconfigService.getActiveSystemSetup();
+        if (response && response.success && response.data) {
+          if (response.data.system_name) {
+            setSystemName(response.data.system_name);
+          }
+        }
+
+        // Fetch news separately
+        const newsResponse = await sysconfigService.getSysconfig();
+        if (newsResponse && newsResponse.news) {
+          setNews(newsResponse.news);
+        }
+      } catch (error) {
+        console.error('Failed to fetch system config:', error);
+      }
+    };
+
+    fetchSystemConfig();
+  }, []);
+
+  // Fetch missing items count once on mount
+  useEffect(() => {
+    infLotInputService.getMissingItems().then(result => {
+      if (result.success && result.data) {
+        setMissingItemCount(result.data.length);
+      }
+    });
+  }, []);
+
+  // Update real-time clock
+  useEffect(() => {
+    const updateClock = () => {
+      const now = new Date();
+      const day = String(now.getDate()).padStart(2, '0');
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const year = now.getFullYear();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+
+      setCurrentTime(`${day}/${month}/${year} ${hours}:${minutes}:${seconds}`);
+    };
+
+    updateClock(); // Initial call
+    const interval = setInterval(updateClock, 1000); // Update every second
+
+    return () => clearInterval(interval); // Cleanup
+  }, []);
+
+  // Session countdown timer - picks nearest between session expiry and force logout times
+  const FORCE_LOGOUT_TIMES = useMemo(() => [
+    { hour: 7, minute: 35 },
+    { hour: 19, minute: 20 },
+  ], []);
+
+  const [sessionCountdown, setSessionCountdown] = useState<string>('');
+  const [sessionUrgent, setSessionUrgent] = useState(false);
+
+  useEffect(() => {
+    if (!sessionExpiry) {
+      setSessionCountdown('');
+      return;
+    }
+
+    const getNextForceLogoutMs = (): number => {
+      const now = new Date();
+      let nearest = Infinity;
+      for (const { hour, minute } of FORCE_LOGOUT_TIMES) {
+        const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, minute, 0, 0);
+        let diff = target.getTime() - now.getTime();
+        if (diff <= 0) diff += 24 * 60 * 60 * 1000;
+        if (diff < nearest) nearest = diff;
+      }
+      return nearest;
+    };
+
+    const updateCountdown = () => {
+      const now = Date.now();
+      const sessionRemaining = new Date(sessionExpiry).getTime() - now;
+      const forceLogoutRemaining = getNextForceLogoutMs();
+      const remaining = Math.min(sessionRemaining, forceLogoutRemaining);
+
+      if (remaining <= 0) {
+        setSessionCountdown('หมดเวลา');
+        setSessionUrgent(true);
+        return;
+      }
+
+      const hours = Math.floor(remaining / (1000 * 60 * 60));
+      const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+
+      const pad = (n: number) => n.toString().padStart(2, '0');
+      setSessionCountdown(`${pad(hours)}:${pad(minutes)}:${pad(seconds)}`);
+      setSessionUrgent(remaining < 30 * 60 * 1000); // Urgent when < 30 min
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, [sessionExpiry, FORCE_LOGOUT_TIMES]);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
+  const toggleMenu = (menuName: string) => {
+    setExpandedMenus(prev => ({
+      ...prev,
+      [menuName]: !prev[menuName]
+    }));
+  };
+
+  const isCurrentPage = (href: string) => {
+    return location.pathname === href;
+  };
+
+  const isParentActive = (item: NavigationItem) => {
+    if (item.href && isCurrentPage(item.href)) return true;
+    if (item.children) {
+      return item.children.some(child => child.href && isCurrentPage(child.href));
+    }
+    return false;
+  };
+
+  const getPageTitle = () => {
+    for (const item of visibleNavigationItems) {
+      if (item.href && isCurrentPage(item.href)) {
+        return item.name;
+      }
+      if (item.children) {
+        for (const child of item.children) {
+          if (child.href && isCurrentPage(child.href)) {
+            return child.name;
+          }
+        }
+      }
+    }
+    return systemName;
+  };
+
+  const handleOpenProfile = () => {
+    setShowProfileModal(true);
+  };
+
+  const handleCloseProfile = () => {
+    setShowProfileModal(false);
+  };
+
+  return (
+    <div className="flex h-screen bg-gradient-to-br from-gray-50 via-orange-50/20 to-yellow-50/20">
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:flex lg:flex-shrink-0">
+        <div className="flex flex-col w-80 shadow-xl">
+          {/* Logo Header - Modern Gradient Theme */}
+          <div className="flex items-center justify-center h-16 px-4 bg-gradient-to-r from-amber-500 via-orange-600 to-yellow-500 flex-shrink-0 shadow-lg relative overflow-hidden">
+            {/* Animated background effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 animate-shimmer"></div>
+            <Link to="/dashboard" className="flex items-center relative z-10">
+              <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center mr-3 flex-shrink-0 shadow-md transform hover:scale-110 transition-transform duration-300">
+                <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+              </div>
+              <span className="text-white font-bold text-xl truncate drop-shadow-sm">{systemName.split(' ').slice(0, 2).join(' ')}</span>
+            </Link>
+          </div>
+
+          {/* Navigation Menu - Scrollable */}
+          <nav className="flex-1 px-4 py-4 bg-white/95 backdrop-blur-sm border-r border-orange-100 overflow-y-auto custom-scrollbar">
+            <div className="space-y-2">
+              {visibleNavigationItems.map((item, index) => (
+                <div key={item.name} className={`space-y-1 animate-fade-in-left delay-${Math.min(index, 5) * 100}`}>
+                  {item.children ? (
+                    // Menu Group with Children
+                    <div>
+                      <button
+                        onClick={() => toggleMenu(item.name)}
+                        className={`
+                          w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium rounded-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-md
+                          ${isParentActive(item)
+                            ? 'bg-gradient-to-r from-orange-50 to-amber-50 text-orange-700 border-l-4 border-orange-500 shadow-md'
+                            : 'text-gray-700 hover:bg-gradient-to-r hover:from-orange-50/50 hover:to-yellow-50/50 hover:text-orange-600'
+                          }
+                        `}
+                      >
+                        <div className="flex items-center">
+                          <span className={`mr-3 transition-all duration-300 hover:scale-110 ${getIconColorClass(item.name)}`}>
+                            {item.icon}
+                          </span>
+                          <span className="truncate">{item.name}</span>
+                        </div>
+                        <svg
+                          className={`w-4 h-4 transition-transform duration-300 ${
+                            expandedMenus[item.name] ? 'rotate-90' : ''
+                          } ${getIconColorClass(item.name)}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+
+                      {/* Sub-menu Items */}
+                      <div className={`
+                        overflow-hidden transition-all duration-300 ease-in-out
+                        ${expandedMenus[item.name] ? (item.name === 'Reports' ? 'max-h-[800px] opacity-100' : 'max-h-96 opacity-100') : 'max-h-0 opacity-0'}
+                      `}>
+                        <div className="ml-8 mt-2 space-y-1 border-l-2 border-orange-200 pl-4">
+                          {item.children?.map((child, childIndex) => (
+                            <Link
+                              key={child.name}
+                              to={child.href!}
+                              onClick={() => setSidebarOpen(false)}
+                              className={`
+                                flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-300 hover:scale-[1.02] animate-fade-in-left delay-${childIndex * 50}
+                                ${isCurrentPage(child.href!)
+                                  ? 'bg-primary-100 text-primary-700 border-l-2 border-primary-600 shadow-sm'
+                                  : 'text-gray-600 hover:bg-gray-50 hover:text-primary-600'
+                                }
+                              `}
+                            >
+                              {child.icon && (
+                                <span className={`mr-3 transition-all duration-300 hover:scale-110 ${
+                                  isCurrentPage(child.href!) ? getIconColorClass(item.name) : getIconColorClass(item.name)
+                                }`}>
+                                  {child.icon}
+                                </span>
+                              )}
+                              <span className="truncate">{child.name}</span>
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    // Single Menu Item
+                    <Link
+                      to={item.href!}
+                      onClick={() => setSidebarOpen(false)}
+                      className={`
+                        flex items-center px-4 py-2.5 text-sm font-medium rounded-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-md
+                        ${isCurrentPage(item.href!)
+                          ? 'bg-gradient-to-r from-orange-50 to-amber-50 text-orange-700 border-l-4 border-orange-500 shadow-md'
+                          : 'text-gray-700 hover:bg-gradient-to-r hover:from-orange-50/50 hover:to-yellow-50/50 hover:text-orange-600'
+                        }
+                      `}
+                    >
+                      <span className={`mr-3 transition-all duration-300 hover:scale-110 ${getIconColorClass(item.name)}`}>
+                        {item.icon}
+                      </span>
+                      <span className="truncate">{item.name}</span>
+                    </Link>
+                  )}
+                </div>
+              ))}
+            </div>
+          </nav>
+
+          {/* User Info - Fixed at Bottom */}
+          <div className="flex-shrink-0 border-t border-orange-100 bg-gradient-to-br from-orange-50/50 to-amber-50/50 backdrop-blur-sm">
+            {/* Session Countdown */}
+            {sessionCountdown && (
+              <div className={`px-4 pt-3 pb-1 flex items-center gap-2 text-xs font-medium ${sessionUrgent ? 'text-red-600' : 'text-gray-500'}`}>
+                <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Session</span>
+                <span className={`font-mono tabular-nums ${sessionUrgent ? 'text-red-600 animate-pulse' : 'text-gray-700'}`}>
+                  {sessionCountdown}
+                </span>
+              </div>
+            )}
+            <div className="flex items-center p-4 pt-2">
+              <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-amber-500 rounded-full flex items-center justify-center mr-3 shadow-md">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <button
+                  onClick={handleOpenProfile}
+                  className="hidden sm:block text-sm hover:text-orange-700 transition-colors duration-200 p-2 rounded-lg hover:bg-white/70 w-full text-left"
+                >
+                  <p className="text-sm font-semibold text-gray-900 truncate">
+                    {user?.username || 'admin'}
+                  </p>
+                  <p className="text-xs text-orange-600 capitalize font-medium">
+                    {user?.role || 'Admin'}
+                  </p>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Sidebar */}
+      <div className={`fixed inset-0 z-50 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`}>
+        <div className="fixed inset-0 bg-black bg-opacity-25" onClick={() => setSidebarOpen(false)} />
+        <div className="relative flex flex-col w-80 h-full bg-white shadow-xl">
+          {/* Mobile Logo Header - Modern Gradient Theme */}
+          <div className="flex items-center justify-between h-16 px-4 bg-gradient-to-r from-amber-500 via-orange-600 to-yellow-500 shadow-lg">
+            <Link to="/dashboard" className="flex items-center" onClick={() => setSidebarOpen(false)}>
+              <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center mr-3 shadow-md">
+                <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+              </div>
+              <span className="text-white font-bold text-xl drop-shadow-sm">{systemName.split(' ').slice(0, 2).join(' ')}</span>
+            </Link>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="p-2 text-white hover:text-gray-200 transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Mobile Navigation Menu */}
+          <nav className="flex-1 px-4 py-4 overflow-y-auto">
+            <div className="space-y-2">
+              {visibleNavigationItems.map((item) => (
+                <div key={item.name} className="space-y-1">
+                  {item.children ? (
+                    // Mobile Menu Group with Children
+                    <div>
+                      <button
+                        onClick={() => toggleMenu(item.name)}
+                        className={`
+                          w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium rounded-xl transition-all duration-200
+                          ${isParentActive(item)
+                            ? 'bg-gradient-to-r from-orange-50 to-amber-50 text-orange-700 border-l-4 border-orange-500 shadow-md'
+                            : 'text-gray-700 hover:bg-gradient-to-r hover:from-orange-50/50 hover:to-yellow-50/50 hover:text-orange-600'
+                          }
+                        `}
+                      >
+                        <div className="flex items-center">
+                          <span className={`mr-3 transition-colors ${
+                            isParentActive(item) ? 'text-orange-600' : 'text-gray-400'
+                          }`}>
+                            {item.icon}
+                          </span>
+                          <span className="truncate">{item.name}</span>
+                        </div>
+                        <svg
+                          className={`w-4 h-4 transition-transform duration-300 ${
+                            expandedMenus[item.name] ? 'rotate-90' : ''
+                          } ${isParentActive(item) ? 'text-orange-600' : 'text-gray-400'}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                      
+                      {/* Mobile Sub-menu Items */}
+                      <div className={`
+                        overflow-hidden transition-all duration-300 ease-in-out
+                        ${expandedMenus[item.name] ? (item.name === 'Reports' ? 'max-h-[800px] opacity-100' : 'max-h-96 opacity-100') : 'max-h-0 opacity-0'}
+                      `}>
+                        <div className="ml-8 mt-2 space-y-1 border-l-2 border-orange-200 pl-4">
+                          {item.children?.map((child) => (
+                            <Link
+                              key={child.name}
+                              to={child.href!}
+                              onClick={() => setSidebarOpen(false)}
+                              className={`
+                                flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200
+                                ${isCurrentPage(child.href!)
+                                  ? 'bg-gradient-to-r from-orange-100 to-amber-100 text-orange-700 border-l-2 border-orange-600 shadow-sm font-medium'
+                                  : 'text-gray-600 hover:bg-orange-50/50 hover:text-orange-600'
+                                }
+                              `}
+                            >
+                              {child.icon && (
+                                <span className={`mr-3 transition-colors ${
+                                  isCurrentPage(child.href!) ? 'text-orange-600' : 'text-gray-400'
+                                }`}>
+                                  {child.icon}
+                                </span>
+                              )}
+                              <span className="truncate">{child.name}</span>
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    // Mobile Single Menu Item
+                    <Link
+                      to={item.href!}
+                      onClick={() => setSidebarOpen(false)}
+                      className={`
+                        flex items-center px-4 py-2.5 text-sm font-medium rounded-xl transition-all duration-200
+                        ${isCurrentPage(item.href!)
+                          ? 'bg-gradient-to-r from-orange-50 to-amber-50 text-orange-700 border-l-4 border-orange-500 shadow-md'
+                          : 'text-gray-700 hover:bg-gradient-to-r hover:from-orange-50/50 hover:to-yellow-50/50 hover:text-orange-600'
+                        }
+                      `}
+                    >
+                      <span className={`mr-3 transition-colors ${
+                        isCurrentPage(item.href!) ? 'text-orange-600' : 'text-gray-400'
+                      }`}>
+                        {item.icon}
+                      </span>
+                      <span className="truncate">{item.name}</span>
+                    </Link>
+                  )}
+                </div>
+              ))}
+            </div>
+          </nav>
+
+          {/* Mobile User Info */}
+          <div className="flex-shrink-0 border-t border-orange-100 bg-gradient-to-br from-orange-50/50 to-amber-50/50">
+            {/* Session Countdown - Mobile */}
+            {sessionCountdown && (
+              <div className={`px-4 pt-3 pb-1 flex items-center gap-2 text-xs font-medium ${sessionUrgent ? 'text-red-600' : 'text-gray-500'}`}>
+                <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Session</span>
+                <span className={`font-mono tabular-nums ${sessionUrgent ? 'text-red-600 animate-pulse' : 'text-gray-700'}`}>
+                  {sessionCountdown}
+                </span>
+              </div>
+            )}
+            <div className="flex items-center p-4 pt-2">
+              <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-amber-500 rounded-full flex items-center justify-center mr-3 shadow-md">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-gray-900 truncate">
+                  {user?.username || 'admin'}
+                </p>
+                <p className="text-xs text-orange-600 capitalize font-medium">
+                  {user?.role || 'Admin'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
+        {/* Top header - Modern Colorful Theme */}
+        <header className="bg-gradient-to-r from-white via-orange-50/30 to-amber-50/30 backdrop-blur-md shadow-lg border-b-2 border-transparent bg-clip-padding relative overflow-hidden flex-shrink-0">
+          {/* Animated Background Gradient */}
+          <div className="absolute inset-0 bg-gradient-to-r from-orange-100/20 via-amber-100/20 to-yellow-100/20 animate-shimmer pointer-events-none"></div>
+
+          <div className="flex items-center justify-between px-4 py-4 relative z-10">
+            {/* Mobile menu button */}
+            <div className="flex items-center lg:hidden">
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="p-2 rounded-xl text-orange-500 hover:text-orange-700 hover:bg-gradient-to-r hover:from-orange-100 hover:to-amber-100 focus:outline-none focus:ring-2 focus:ring-orange-400 transition-all duration-300 hover:scale-110 shadow-sm hover:shadow-md"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Page title - Hidden on mobile, shown on desktop */}
+            <div className="hidden lg:block flex-1 max-w-5xl">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-600 via-amber-600 to-yellow-600 bg-clip-text text-transparent animate-fade-in-up drop-shadow-sm">
+                {getPageTitle()}
+              </h1>
+              {/* News Section with Blink Effect */}
+              <div className="relative mt-1 w-full bg-gradient-to-r from-orange-50/50 via-amber-50/50 to-yellow-50/50 rounded-lg px-3 py-1.5 border border-orange-200/50 shadow-sm">
+                <div className="flex items-center">
+                  <span className="text-orange-600 mr-2 flex-shrink-0 text-lg">📢</span>
+                  <p className="text-sm text-red-600 font-semibold animate-blink-text">
+                    {news || `Welcome to ${systemName} 🎯`}
+                  </p>
+                </div>
+              </div>
+
+              {/* Missing Parts Master Alert */}
+              {missingItemCount > 0 && (
+                <div className="relative mt-1 w-full bg-amber-50 rounded-lg px-3 py-1.5 border border-amber-400 shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="text-amber-500 flex-shrink-0">⚠️</span>
+                    <p className="text-xs font-semibold text-amber-800">
+                      พบ {missingItemCount} รายการที่ยังไม่มีใน Parts Master —{' '}
+                      <Link
+                        to="/master-data/parts"
+                        className="underline text-amber-700 hover:text-amber-900 transition-colors"
+                      >
+                        คลิกเพื่อดูรายละเอียด
+                      </Link>
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* real time clock */}
+            <div className="hidden lg:block">
+              <div className="flex items-center space-x-2 bg-gradient-to-r from-blue-50 via-cyan-50 to-teal-50 px-4 py-2 rounded-xl border-2 border-blue-200/50 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105">
+                <svg className="w-5 h-5 text-blue-600 animate-pulse-slow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-sm font-bold bg-gradient-to-r from-blue-700 via-cyan-700 to-teal-700 bg-clip-text text-transparent tabular-nums">
+                  {currentTime}
+                </span>
+              </div>
+            </div>
+
+            {/* Header actions */}
+            <div className="flex items-center space-x-3">
+              {/* Notifications */}
+              <button className="p-2.5 text-purple-500 hover:text-purple-700 relative transition-all duration-300 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 rounded-xl shadow-sm hover:shadow-md hover:scale-110 group">
+                <svg className="w-5 h-5 transition-transform duration-300 group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                </svg>
+                <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-gradient-to-br from-red-400 to-pink-600 rounded-full animate-pulse shadow-lg"></span>
+                <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-400 rounded-full animate-ping"></span>
+              </button>
+
+              {/* User Info - Desktop */}
+              <button
+                onClick={handleOpenProfile}
+                className="hidden sm:flex items-center space-x-2 text-sm bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 hover:from-indigo-100 hover:via-purple-100 hover:to-pink-100 transition-all duration-300 p-2.5 rounded-xl border-2 border-indigo-200/50 shadow-sm hover:shadow-md hover:scale-105"
+              >
+                <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                <span className="text-indigo-700 font-medium">ผู้ใช้งาน:</span>
+                <span className="font-bold bg-gradient-to-r from-indigo-700 via-purple-700 to-pink-700 bg-clip-text text-transparent">
+                  {user?.username || 'admin'} {user?.name|| 'Guest'} ({user?.position|| 'QC'})
+                </span>
+              </button>
+
+              {/* Logout Button */}
+              <button
+                onClick={handleLogout}
+                className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-xl bg-gradient-to-r from-red-50 via-orange-50 to-amber-50 border-2 border-red-200 text-red-700 hover:from-red-100 hover:via-orange-100 hover:to-amber-100 hover:border-red-400 hover:text-red-800 hover:shadow-lg hover:shadow-red-200/50 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-400 transition-all duration-300 shadow-md group"
+              >
+                <svg className="w-4 h-4 mr-2 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                <span className="hidden sm:inline font-semibold">Logout</span>
+              </button>
+            </div>
+          </div>
+        </header>
+
+        {/* Page content */}
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gradient-to-br from-gray-50 via-orange-50/10 to-yellow-50/10">
+          <div className="px-6 py-8 flex flex-col min-h-full">
+            {children}
+          </div>
+        </main>
+
+        {/* Footer */}
+        <Footer />
+      </div>
+
+      {/* Profile Modal */}
+      {user && (
+        <UserInfoModal
+          isOpen={showProfileModal}
+          onClose={handleCloseProfile}
+          user={user}
+          showEditButton={true}
+          showPasswordButton={true}
+          allowRoleDisplay={true}
+          compactMode={false}
+        />
+      )}
+
+      {/* Custom Styles */}
+      <style>{`
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        .animate-shimmer {
+          animation: shimmer 3s infinite;
+        }
+
+        @keyframes blink-text {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.2; }
+        }
+        .animate-blink-text {
+          animation: blink-text 3s ease-in-out infinite;
+        }
+
+        /* Fade In Animations */
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes fadeInLeft {
+          from {
+            opacity: 0;
+            transform: translateX(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        @keyframes pulse-slow {
+          0%, 100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.8;
+          }
+        }
+
+        @keyframes bounce-subtle {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-3px);
+          }
+        }
+
+        @keyframes rotate-slow {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+
+        @keyframes glow {
+          0%, 100% {
+            box-shadow: 0 0 5px rgba(249, 115, 22, 0.3);
+          }
+          50% {
+            box-shadow: 0 0 15px rgba(249, 115, 22, 0.6);
+          }
+        }
+
+        .animate-fade-in-up {
+          animation: fadeInUp 0.5s ease-out forwards;
+        }
+
+        .animate-fade-in-left {
+          animation: fadeInLeft 0.5s ease-out forwards;
+        }
+
+        .animate-pulse-slow {
+          animation: pulse-slow 3s ease-in-out infinite;
+        }
+
+        .animate-bounce-subtle {
+          animation: bounce-subtle 2s ease-in-out infinite;
+        }
+
+        .animate-rotate-slow {
+          animation: rotate-slow 20s linear infinite;
+        }
+
+        .animate-glow {
+          animation: glow 2s ease-in-out infinite;
+        }
+
+        /* Stagger delays */
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+        .delay-400 { animation-delay: 0.4s; }
+        .delay-500 { animation-delay: 0.5s; }
+
+        /* Icon Color Classes */
+        .icon-dashboard { color: #3b82f6; }
+        .icon-customer { color: #8b5cf6; }
+        .icon-inspection { color: #10b981; }
+        .icon-master { color: #f59e0b; }
+        .icon-news { color: #06b6d4; }
+        .icon-users { color: #ec4899; }
+        .icon-reports { color: #ef4444; }
+        .icon-interface { color: #6366f1; }
+        .icon-settings { color: #64748b; }
+
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #fef3c7;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: linear-gradient(180deg, #f97316, #fb923c);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: linear-gradient(180deg, #ea580c, #f97316);
+        }
+      `}</style>
+    </div>
+  );
+}

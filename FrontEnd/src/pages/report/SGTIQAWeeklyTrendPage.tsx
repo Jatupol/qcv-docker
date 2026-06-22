@@ -1,0 +1,373 @@
+// client/src/pages/report/SGTIQAWeeklyTrendPage.tsx
+// ===== SGT IQA WEEKLY TREND REPORT PAGE =====
+// Complete Separation Entity Architecture - Chart Visualization Report
+// Manufacturing/Quality Control System - Orange Theme Implementation
+
+import React from 'react';
+import SGTIQAWeeklyTrendReportBase, {
+  type SGTIQAWeeklyTrendReportConfig,
+  type WeeklyTrendData,
+  type DefectType
+} from '../../components/report/SGTIQAWeeklyTrendReportBase';
+
+// ============ SAMPLE DATA ============
+
+const weeklyTrendData: WeeklyTrendData[] = [
+  {
+    period: 'Aug\'23',
+    dppm: 0,
+    lar: 100.00,
+    lotAuditVisual: 122,
+    lotPassVisual: 72,
+    lotFailVisual: 27,
+    lotSamplingQty: 3671,
+    defectQty: 0,
+    stickyOnDamper: 0,
+    brownContamOnDamper: 0,
+    contamination: 0,
+    bentDentDeform: 0,
+    p2tCrack: 0,
+    fiberOnAnyArea: 0,
+    scratch: 0,
+    otherDefects: 0
+  },
+  {
+    period: 'Sep\'23',
+    dppm: 0,
+    lar: 100.00,
+    lotAuditVisual: 152,
+    lotPassVisual: 85,
+    lotFailVisual: 53,
+    lotSamplingQty: 5183,
+    defectQty: 0,
+    stickyOnDamper: 0,
+    brownContamOnDamper: 0,
+    contamination: 0,
+    bentDentDeform: 0,
+    p2tCrack: 0,
+    fiberOnAnyArea: 0,
+    scratch: 0,
+    otherDefects: 0
+  },
+  {
+    period: 'Oct\'23',
+    dppm: 0,
+    lar: 100.00,
+    lotAuditVisual: 205,
+    lotPassVisual: 74,
+    lotFailVisual: 66,
+    lotSamplingQty: 6915,
+    defectQty: 0,
+    stickyOnDamper: 0,
+    brownContamOnDamper: 0,
+    contamination: 0,
+    bentDentDeform: 0,
+    p2tCrack: 0,
+    fiberOnAnyArea: 0,
+    scratch: 0,
+    otherDefects: 0
+  },
+  {
+    period: 'Nov\'23',
+    dppm: 0,
+    lar: 100.00,
+    lotAuditVisual: 307,
+    lotPassVisual: 79,
+    lotFailVisual: 84,
+    lotSamplingQty: 6317,
+    defectQty: 0,
+    stickyOnDamper: 0,
+    brownContamOnDamper: 0,
+    contamination: 0,
+    bentDentDeform: 0,
+    p2tCrack: 0,
+    fiberOnAnyArea: 0,
+    scratch: 0,
+    otherDefects: 0
+  },
+  {
+    period: 'Dec\'23',
+    dppm: 0,
+    lar: 100.00,
+    lotAuditVisual: 600,
+    lotPassVisual: 74,
+    lotFailVisual: 60,
+    lotSamplingQty: 6600,
+    defectQty: 0,
+    stickyOnDamper: 0,
+    brownContamOnDamper: 0,
+    contamination: 0,
+    bentDentDeform: 0,
+    p2tCrack: 0,
+    fiberOnAnyArea: 0,
+    scratch: 0,
+    otherDefects: 0
+  },
+  {
+    period: 'Jan\'24',
+    dppm: 0,
+    lar: 100.00,
+    lotAuditVisual: 86,
+    lotPassVisual: 86,
+    lotFailVisual: 114,
+    lotSamplingQty: 10473,
+    defectQty: 0,
+    stickyOnDamper: 0,
+    brownContamOnDamper: 0,
+    contamination: 0,
+    bentDentDeform: 0,
+    p2tCrack: 0,
+    fiberOnAnyArea: 0,
+    scratch: 0,
+    otherDefects: 0
+  },
+  {
+    period: 'Feb\'24',
+    dppm: 0,
+    lar: 100.00,
+    lotAuditVisual: 114,
+    lotPassVisual: 114,
+    lotFailVisual: 113,
+    lotSamplingQty: 7847,
+    defectQty: 0,
+    stickyOnDamper: 0,
+    brownContamOnDamper: 0,
+    contamination: 0,
+    bentDentDeform: 0,
+    p2tCrack: 0,
+    fiberOnAnyArea: 0,
+    scratch: 0,
+    otherDefects: 0
+  },
+  {
+    period: 'Mar\'24',
+    dppm: 0,
+    lar: 100.00,
+    lotAuditVisual: 1362,
+    lotPassVisual: 114,
+    lotFailVisual: 78,
+    lotSamplingQty: 8429,
+    defectQty: 0,
+    stickyOnDamper: 0,
+    brownContamOnDamper: 0,
+    contamination: 0,
+    bentDentDeform: 0,
+    p2tCrack: 0,
+    fiberOnAnyArea: 0,
+    scratch: 0,
+    otherDefects: 0
+  },
+  {
+    period: 'Apr\'24',
+    dppm: 0,
+    lar: 100.00,
+    lotAuditVisual: 429,
+    lotPassVisual: 90,
+    lotFailVisual: 100,
+    lotSamplingQty: 7845,
+    defectQty: 0,
+    stickyOnDamper: 0,
+    brownContamOnDamper: 0,
+    contamination: 0,
+    bentDentDeform: 0,
+    p2tCrack: 0,
+    fiberOnAnyArea: 0,
+    scratch: 0,
+    otherDefects: 0
+  },
+  {
+    period: 'May\'24',
+    dppm: 0,
+    lar: 100.00,
+    lotAuditVisual: 1089,
+    lotPassVisual: 95,
+    lotFailVisual: 73,
+    lotSamplingQty: 7845,
+    defectQty: 0,
+    stickyOnDamper: 0,
+    brownContamOnDamper: 0,
+    contamination: 0,
+    bentDentDeform: 0,
+    p2tCrack: 0,
+    fiberOnAnyArea: 0,
+    scratch: 0,
+    otherDefects: 0
+  },
+  {
+    period: 'Jun\'24',
+    dppm: 0,
+    lar: 100.00,
+    lotAuditVisual: 95,
+    lotPassVisual: 95,
+    lotFailVisual: 73,
+    lotSamplingQty: 8869,
+    defectQty: 0,
+    stickyOnDamper: 0,
+    brownContamOnDamper: 0,
+    contamination: 0,
+    bentDentDeform: 0,
+    p2tCrack: 0,
+    fiberOnAnyArea: 0,
+    scratch: 0,
+    otherDefects: 0
+  },
+  {
+    period: 'Jul\'24',
+    dppm: 0,
+    lar: 100.00,
+    lotAuditVisual: 73,
+    lotPassVisual: 73,
+    lotFailVisual: 13,
+    lotSamplingQty: 6859,
+    defectQty: 0,
+    stickyOnDamper: 0,
+    brownContamOnDamper: 0,
+    contamination: 0,
+    bentDentDeform: 0,
+    p2tCrack: 0,
+    fiberOnAnyArea: 0,
+    scratch: 0,
+    otherDefects: 0
+  },
+  {
+    period: 'WW05\nAug\'24',
+    dppm: 0,
+    lar: 100.00,
+    lotAuditVisual: 160,
+    lotPassVisual: 15,
+    lotFailVisual: 5,
+    lotSamplingQty: 2693,
+    defectQty: 0,
+    stickyOnDamper: 0,
+    brownContamOnDamper: 0,
+    contamination: 0,
+    bentDentDeform: 0,
+    p2tCrack: 0,
+    fiberOnAnyArea: 0,
+    scratch: 0,
+    otherDefects: 0
+  },
+  {
+    period: 'WW06\nAug\'24',
+    dppm: 0,
+    lar: 100.00,
+    lotAuditVisual: 1160,
+    lotPassVisual: 21,
+    lotFailVisual: 26,
+    lotSamplingQty: 2632,
+    defectQty: 0,
+    stickyOnDamper: 0,
+    brownContamOnDamper: 0,
+    contamination: 0,
+    bentDentDeform: 0,
+    p2tCrack: 0,
+    fiberOnAnyArea: 0,
+    scratch: 0,
+    otherDefects: 0
+  },
+  {
+    period: 'WW07\nAug\'24',
+    dppm: 0,
+    lar: 100.00,
+    lotAuditVisual: 130,
+    lotPassVisual: 16,
+    lotFailVisual: 24,
+    lotSamplingQty: 2862,
+    defectQty: 0,
+    stickyOnDamper: 0,
+    brownContamOnDamper: 0,
+    contamination: 0,
+    bentDentDeform: 0,
+    p2tCrack: 0,
+    fiberOnAnyArea: 0,
+    scratch: 0,
+    otherDefects: 0
+  },
+  {
+    period: 'WW08\nAug\'24',
+    dppm: 0,
+    lar: 100.00,
+    lotAuditVisual: 130,
+    lotPassVisual: 16,
+    lotFailVisual: 24,
+    lotSamplingQty: 1327,
+    defectQty: 0,
+    stickyOnDamper: 0,
+    brownContamOnDamper: 0,
+    contamination: 0,
+    bentDentDeform: 0,
+    p2tCrack: 0,
+    fiberOnAnyArea: 0,
+    scratch: 0,
+    otherDefects: 0
+  },
+  {
+    period: 'WW09\nAug\'24',
+    dppm: 0,
+    lar: 100.00,
+    lotAuditVisual: 19,
+    lotPassVisual: 19,
+    lotFailVisual: 0,
+    lotSamplingQty: 226,
+    defectQty: 0,
+    stickyOnDamper: 0,
+    brownContamOnDamper: 0,
+    contamination: 0,
+    bentDentDeform: 0,
+    p2tCrack: 0,
+    fiberOnAnyArea: 0,
+    scratch: 0,
+    otherDefects: 0
+  },
+  {
+    period: 'Aug\'24',
+    dppm: 0,
+    lar: 100.00,
+    lotAuditVisual: 127,
+    lotPassVisual: 94,
+    lotFailVisual: 67,
+    lotSamplingQty: 127,
+    defectQty: 0,
+    stickyOnDamper: 0,
+    brownContamOnDamper: 0,
+    contamination: 0,
+    bentDentDeform: 0,
+    p2tCrack: 0,
+    fiberOnAnyArea: 0,
+    scratch: 0,
+    otherDefects: 0
+  }
+];
+
+// ============ DEFECT TYPES CONFIGURATION ============
+
+const defectTypes: DefectType[] = [
+  { name: 'Other (Discolor, Laser, Misalignment, etc.)', color: '#FFA500', key: 'otherDefects' },
+  { name: 'Scratch', color: '#8B00FF', key: 'scratch' },
+  { name: 'Fiber on any area', color: '#8B0000', key: 'fiberOnAnyArea' },
+  { name: 'P2T Crack', color: '#0000FF', key: 'p2tCrack' },
+  { name: 'Bent Dent Deform', color: '#FF0000', key: 'bentDentDeform' },
+  { name: 'Contamination', color: '#FFA500', key: 'contamination' },
+  { name: 'Fiber Damper', color: '#008000', key: 'fiberOnAnyArea' },
+  { name: 'Brown Contam on Damper', color: '#A0522D', key: 'brownContamOnDamper' },
+  { name: 'Sticky on Damper', color: '#800080', key: 'stickyOnDamper' }
+];
+
+// Configuration for SGT IQA Weekly Trend report
+const sgtIQAWeeklyTrendConfig: SGTIQAWeeklyTrendReportConfig = {
+  // Report metadata
+  title: 'Seagate IQA Weekly Result',
+  breadcrumbTitle: 'SGT IQA Weekly Result',
+
+  // Data (sample data - can be replaced with API data in the future)
+  data: weeklyTrendData,
+
+  // Defect type configuration
+  defectTypes: defectTypes
+};
+
+const SGTIQAWeeklyTrendPage: React.FC = () => {
+  return <SGTIQAWeeklyTrendReportBase config={sgtIQAWeeklyTrendConfig} />;
+};
+
+export default SGTIQAWeeklyTrendPage;
